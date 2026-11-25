@@ -133,8 +133,8 @@ const sfx = {
 };
 
 let level = (() => {
-  try { const v = parseInt(localStorage.getItem("pus-level"), 10); return v >= 0 && v < LEVELS.length ? v : 2; }
-  catch { return 2; }
+  try { const v = parseInt(localStorage.getItem("pus-level"), 10); return v >= 0 && v < LEVELS.length ? v : 0; }
+  catch { return 0; }
 })();
 let sticks = [], fading = [], score = 0, errs = 0, secs = 0, timer = null, started = false, over = false;
 let shadeOn = true, hoverOn = true, hoverId = -1;
