@@ -16,6 +16,7 @@
   .dropdown { display: none; position: absolute; top: 100%; left: 0; background: #fff; color: #000; border: 1px solid #000;
               min-width: 200px; z-index: 10; box-shadow: 2px 2px 0 rgba(0,0,0,.4); }
   .menu.open .dropdown { display: block; }
+  .menu:last-child .dropdown { left: auto; right: 0; }
   .dropdown div { padding: 4px 14px 4px 28px; white-space: nowrap; }
   .dropdown div:hover { background: #0000a8; color: #fff; }
   .dropdown .check { padding-left: 14px; }
@@ -44,33 +45,39 @@
 <div class="window">
   <div class="title" id="title">Pick Up Sticks</div>
   <div class="menubar">
-    <div class="menu">Игра
+    <div class="menu"><span data-t="mGame">Игра</span>
       <div class="dropdown">
-        <div id="newGame">Нова игра</div>
-        <div id="soundToggle" class="check">Звук</div>
-        <div id="shadeToggle" class="check">Сенки и обем</div>
-        <div id="hoverToggle" class="check">Контур при посочване</div>
+        <div id="newGame" data-t="newGame">Нова игра</div>
+        <div id="soundToggle" class="check" data-t="sound">Звук</div>
+        <div id="shadeToggle" class="check" data-t="shade">Сенки и обем</div>
+        <div id="hoverToggle" class="check" data-t="hover">Контур при посочване</div>
       </div>
     </div>
-    <div class="menu">Ниво
+    <div class="menu"><span data-t="mLevel">Ниво</span>
       <div class="dropdown" id="levels"></div>
     </div>
-    <div class="menu">Помощ
+    <div class="menu">Език / Language
       <div class="dropdown">
-        <div id="how">Как се играе</div>
+        <div id="langBg">Български</div>
+        <div id="langEn">English</div>
+      </div>
+    </div>
+    <div class="menu"><span data-t="mHelp">Помощ</span>
+      <div class="dropdown">
+        <div id="how" data-t="how">Как се играе</div>
       </div>
     </div>
   </div>
   <div class="wrap">
     <canvas id="cv" width="640" height="440"></canvas>
-    <div class="win" id="win"><div><b id="winText"></b><br><button id="again">Нова игра</button></div></div>
+    <div class="win" id="win"><div><b id="winText"></b><br><button id="again" data-t="newGame">Нова игра</button></div></div>
   </div>
   <div class="status">
-    <span>Време: <b id="time">0:00</b></span>
-    <span>Точки: <b id="score">0</b></span>
-    <span>Остават: <b id="left">0</b></span>
-    <span>Грешки: <b id="errs">0</b></span>
-    <button id="hint">Подсказка (−5)</button>
+    <span><span data-t="time">Време</span>: <b id="time">0:00</b></span>
+    <span><span data-t="score">Точки</span>: <b id="score">0</b></span>
+    <span><span data-t="left">Остават</span>: <b id="left">0</b></span>
+    <span><span data-t="errs">Грешки</span>: <b id="errs">0</b></span>
+    <button id="hint" data-t="hint">Подсказка (−5)</button>
   </div>
 </div>
 
@@ -84,11 +91,65 @@ const TYPES = [
   { name: "Зелена",  color: "#00ff00", pts: 3,  count: 12 },
   { name: "Жълта",   color: "#ffff00", pts: 2,  count: 16 }
 ];
-const LEVELS = [
-  { name: "Лесно (21 пръчици)",  k: 0.5 },
-  { name: "Средно (31 пръчици)", k: 0.75 },
-  { name: "Трудно (41 пръчици)", k: 1 }
-];
+const LEVELS = [{ k: 0.5, n: 21 }, { k: 0.75, n: 31 }, { k: 1, n: 41 }];
+
+// --- преводи ---
+const I18N = {
+  bg: {
+    mGame: "Игра", newGame: "Нова игра", sound: "Звук", shade: "Сенки и обем", hover: "Контур при посочване",
+    mLevel: "Ниво", mHelp: "Помощ", how: "Как се играе",
+    time: "Време", score: "Точки", left: "Остават", errs: "Грешки", hint: "Подсказка (−5)",
+    levels: ["Лесно", "Средно", "Трудно"], sticks: "пръчици",
+    ranks: ["Безупречни ръце", "Сръчни пръсти", "Малко разклатена ръка", "Слон в магазин за порцелан"],
+    win: (t, sc, er, r) => `Браво! Събра всички пръчици за ${t} мин.<br>Точки: ${sc} · Грешки: ${er}<br>${r}`,
+    help: [
+      "Купчина пръчици е хвърлена на масата. Кликай (или докосвай) пръчица, за да я вдигнеш — но само ако отгоре ѝ не лежи друга пръчица.",
+      "Ако кликнеш пръчица, която е затисната, това е грешка: −5 точки.",
+      "Точки: червена 20, синя 10, лилава 5, зелена 3, жълта 2.",
+      "Сенките показват коя пръчица е отгоре: горната хвърля сянка върху тези под нея. Пунктирният контур при посочване показва цялата пръчица, дори частите ѝ под други.",
+      "На телефон: докато държиш пръста, виждаш контура на пръчицата; пусни, за да я вдигнеш, или плъзни встрани, за да се откажеш.",
+      "Подсказка показва най-ценната свободна пръчица, но струва 5 точки.",
+      "Целта е да вдигнеш всички пръчици с възможно най-малко грешки."
+    ]
+  },
+  en: {
+    mGame: "Game", newGame: "New Game", sound: "Sound", shade: "Shadows & 3D", hover: "Outline on Hover",
+    mLevel: "Skill", mHelp: "Help", how: "How to Play",
+    time: "Time", score: "Score", left: "Left", errs: "Mistakes", hint: "Hint (−5)",
+    levels: ["Beginner", "Intermediate", "Advanced"], sticks: "sticks",
+    ranks: ["Steady Hands", "Nimble Fingers", "A Bit Shaky", "Bull in a China Shop"],
+    win: (t, sc, er, r) => `Well done! You picked up all the sticks in ${t}.<br>Score: ${sc} · Mistakes: ${er}<br>${r}`,
+    help: [
+      "A pile of sticks has been dropped on the table. Click (or tap) a stick to pick it up — but only if no other stick lies on top of it.",
+      "Clicking a stick that is pinned down is a mistake: −5 points.",
+      "Points: red 20, blue 10, magenta 5, green 3, yellow 2.",
+      "Shadows show which stick is on top: the upper stick casts a shadow on the ones below it. The dashed outline on hover shows the whole stick, even the parts hidden under others.",
+      "On a phone: while your finger is down you see the stick's outline; lift to pick it up, or slide away to cancel.",
+      "Hint flashes the most valuable free stick, but costs 5 points.",
+      "The goal is to pick up every stick with as few mistakes as possible."
+    ]
+  }
+};
+let lang = (() => {
+  try { const v = localStorage.getItem("pus-lang"); if (v === "bg" || v === "en") return v; } catch {}
+  return /^bg\b/i.test(navigator.language || "") ? "bg" : "en";
+})();
+const T = () => I18N[lang];
+const levelName = i => `${T().levels[i]} (${LEVELS[i].n} ${T().sticks})`;
+function setTitle() { document.getElementById("title").textContent = "Pick Up Sticks — " + T().levels[level]; }
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-t]").forEach(el => { el.textContent = T()[el.dataset.t]; });
+  document.getElementById("langBg").classList.toggle("check", lang === "bg");
+  document.getElementById("langEn").classList.toggle("check", lang === "en");
+  buildMenu(); setTitle(); fit();
+}
+function setLang(l) {
+  lang = l;
+  try { localStorage.setItem("pus-lang", l); } catch {}
+  applyLang();
+  if (over) $("winText").innerHTML = winMessage();
+}
 const $ = id => document.getElementById(id);
 const cv = $("cv"), ctx = cv.getContext("2d");
 const dpr = window.devicePixelRatio || 1;
@@ -175,7 +236,7 @@ function newGame() {
     const y = Math.round(M + Math.random() * (H - 2 * M - h));
     return { id, type: t, x, y, w, h };
   });
-  $("title").textContent = "Pick Up Sticks — " + LEVELS[level].name.split(" ")[0];
+  setTitle();
   $("win").classList.remove("show");
   $("time").textContent = fmtTime(0);
   updateHUD();
@@ -205,12 +266,15 @@ function boardPoint(e) {
 }
 const touchTol = () => 10 * W / cv.getBoundingClientRect().width; // ~10 екранни пиксела
 
+function winMessage() {
+  const r = T().ranks[errs === 0 ? 0 : errs <= 3 ? 1 : errs <= 8 ? 2 : 3];
+  return T().win(fmtTime(secs), score, errs, r);
+}
 function finish() {
   over = true;
   clearInterval(timer);
   setTimeout(sfx.win, 150);
-  const title = errs === 0 ? "Безупречни ръце" : errs <= 3 ? "Сръчни пръсти" : errs <= 8 ? "Малко разклатена ръка" : "Слон в магазин за порцелан";
-  $("winText").innerHTML = `Браво! Събра всички пръчици за ${fmtTime(secs)} мин.<br>Точки: ${score} · Грешки: ${errs}<br>${title}`;
+  $("winText").innerHTML = winMessage();
   $("win").classList.add("show");
 }
 
@@ -339,7 +403,7 @@ function buildMenu() {
   box.innerHTML = "";
   LEVELS.forEach((l, i) => {
     const d = document.createElement("div");
-    d.textContent = l.name;
+    d.textContent = levelName(i);
     if (i === level) d.className = "check";
     d.onclick = () => {
       level = i;
@@ -372,19 +436,14 @@ function setupToggle(id, key, apply) {
 setupToggle("soundToggle", "sound", on => { soundOn = on; });
 setupToggle("shadeToggle", "shade", on => { shadeOn = on; });
 setupToggle("hoverToggle", "hover", on => { hoverOn = on; });
-$("how").onclick = () => alert(
-  "Купчина пръчици е хвърлена на масата. Кликай (или докосвай) пръчица, за да я вдигнеш — но само ако отгоре ѝ не лежи друга пръчица.\n\n" +
-  "Ако кликнеш пръчица, която е затисната, това е грешка: −5 точки.\n\n" +
-  "Точки: червена 20, синя 10, лилава 5, зелена 3, жълта 2.\n\n" +
-  "Сенките показват коя пръчица е отгоре: горната хвърля сянка върху тези под нея. Пунктирният контур при посочване показва цялата пръчица, дори частите ѝ под други.\n\n" +
-  "На телефон: докато държиш пръста, виждаш контура на пръчицата; пусни, за да я вдигнеш, или плъзни встрани, за да се откажеш.\n\n" +
-  "Подсказка показва най-ценната свободна пръчица, но струва 5 точки.\n\n" +
-  "Целта е да вдигнеш всички пръчици с възможно най-малко грешки.");
+$("how").onclick = () => alert(T().help.join("\n\n"));
+$("langBg").onclick = () => setLang("bg");
+$("langEn").onclick = () => setLang("en");
 
 addEventListener("resize", () => {
   if (!started && (H > W) !== isPortrait()) newGame(); else fit();
 });
-buildMenu();
+applyLang();
 newGame();
 fit();
 requestAnimationFrame(draw);
